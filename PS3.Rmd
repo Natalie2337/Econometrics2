@@ -1,0 +1,122 @@
+---
+title: "PS3"
+output: pdf_document
+date: "2025-02-25"
+---
+
+```{r}
+library(dplyr)
+library(ggplot2)
+library(fixest)
+library(tidyr)
+```
+
+
+Q1
+```{r}
+###################################### Data Generation
+set.seed(1234)
+
+n_units <- 1000
+
+#50 states
+states <- 1:50
+unit_states <- sample(states, n_units, replace = TRUE) ## assign 1-1000 to different states
+
+#Policy years
+g_list <- c(1996, 2002, 2008, 2014)
+state_groups <- sample(g_list, 50, replace = TRUE)  # every state is assigned to a policy year
+unit_groups <- state_groups[unit_states]
+
+#years
+years <- 1990:2020
+n_years <- length(years)
+
+#construct the panel data
+data <- expand.grid(unit = 1:n_units, year = years)
+data$state <- rep(unit_states, each = n_years)  
+data$G <- rep(unit_groups, each = n_years)  # rep: replicate the element n times
+
+#unit fixed effect α_i
+alpha <- rnorm(n_units, mean = data$state / 1, sd = 1)
+data$alpha <- rep(alpha, each = n_years)
+
+#time fixed effect λ_t
+data$lambda <- NA 
+time_FE_errors <- rnorm(1, mean = 0, sd = 1)
+
+for (g in g_list) {
+  indices <- which(data$G == g)  ## the number of rows that G_i=g
+  data$lambda[indices] <- 0.1 * (data$year[indices] - g) + time_FE_errors
+}
+
+
+#idiosyncratic error ε_it
+data$epsilon <- rnorm(n_units * n_years, mean = 0, sd = 0.5)
+
+#treatment effect τ_it
+data$treatment_effect <- (data$year - data$G + 1) * (data$year >= data$G)
+
+# Y_it
+data$Y <- (2020 - data$G) + data$alpha + data$lambda + data$treatment_effect + data$epsilon
+
+head(data)
+```
+
+
+```{r}
+## Plot ATT
+## ATT
+ATT_data <- data %>%
+  group_by(year, G) %>%
+  summarise(ATT = mean(treatment_effect), .groups = 'drop')
+
+
+## plot ATT & year t
+ggplot(ATT_data, aes(x = year, y = ATT, color = factor(G))) +
+  geom_line(size = 1) +
+  theme_minimal() +
+  labs(title = "ATT over t",
+       x = "t",
+       y = "ATT",
+       color = "Policy Enactment Year")
+
+
+## plot ATT & t-g
+ggplot(ATT_data, aes(x = year-G, y = ATT, color = factor(G))) +
+  geom_line(size = 1) +
+  theme_minimal() +
+  labs(title = "ATT over t-g",
+       x = "t-g",
+       y = "ATT",
+       color = "Policy Enactment Year")
+```
+
+
+Q2
+```{r}
+
+```
+
+
+
+
+Q6
+
+When ATT(g,t) can be identified, we should have: (1) the treated group should be treated before t, that is: $t \geq g$. (2) There is still comparison group that hasn't been treated at time t, that is $t \leq 2013$
+
+So the set $\{g,t\}$ is:
+
+\[
+\{ g, t \} \text{ such that } g \in \{1996, 2002, 2008, 2014\}, t \geq g, t \leq 2013
+\]
+
+
+The estimand is:
+\[
+ATT(g,t) = E[Y_{igt} | G_i = g, t] - E[Y_{ijt} | G_j > t]
+\]
+
+The assumption: (1) Parallel trends assumption. (2) No anticipation effects.
+
+In the TWFE model, the comparisons are 

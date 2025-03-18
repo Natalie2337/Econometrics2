@@ -1,0 +1,201 @@
+---
+title: "Econometrics Final"
+author: "Yuhuan Huang"
+date: "2025-03-10"
+output: pdf_document
+---
+
+```{r, message=FALSE, warning=FALSE}
+library(AER)
+library(dplyr)
+library(broom)
+data <- read.csv("draft.csv", header = TRUE)
+```
+
+\section{Q1}
+
+```{r}
+model <- lm(lwage ~ vet, data = data)
+summary(model)
+```
+
+
+From the regression result, we can see that the coefficient of vet is -0.0205. Therefore, we can say that the average effect of being a veteran on log wage is -0.0205, given other things the same. However, with a p-value of 0.22 (larger than 0.05), and t-value of -1.228 (whose absolute value is smaller than 1.96), we can say that this effect is not statistically significant.
+
+```{r}
+# Check endogeneity
+residuals_ols <- resid(model)
+cor_test <- cor.test(residuals_ols, data$vet)
+print(cor_test)
+```
+
+```{r}
+# Hausman test
+iv_model <- ivreg(lwage ~ vet | elig, data = data)
+
+hausman_test <- function(ols, iv) {
+  # coefs
+  b_ols <- coef(ols)
+  b_iv <- coef(iv)
+  
+  # covarians matrix
+  V_ols <- vcov(ols)
+  V_iv <- vcov(iv)
+  
+  # 
+  diff_beta <- b_iv - b_ols
+  V_diff <- V_iv - V_ols
+  
+  #
+  stat <- t(diff_beta) %*% solve(V_diff) %*% diff_beta
+  p_value <- pchisq(stat, df = length(b_ols) - 1, lower.tail = FALSE)
+  
+  return(list(statistic = stat, p_value = p_value))
+}
+
+result <- hausman_test(model, iv_model)
+print(result)
+```
+
+When the regression has endogeneity problem, or breaking the $GM_3$ assumption $E[vet' \, \varepsilon_i] = 0$, it wouldn't be consistent.
+
+However, as I applied residual check and Hausman test based on IV, we can see that there is no endogeneity problem. Therefore, the estimator is already consistent.
+
+
+\section{Q2}
+
+The compliers are those individuals: If drafted by the lottery (draft eligible), then they serve the army (are veteran); If they are not drafted by the lottery (draft not eligible) , then they don't serve the army (are not veteran).
+
+The always-takers are those individuals: Whether or not they are drafted by the lottery (whether or not draft eligible), they always serve the army (are veteran).
+
+The never-takers are those individuals: Whether or not they are drafted by the lottery (whether or not draft eligible), they never serve the army (are not veteran).
+
+The defiers are those individuals: If drafted by the lottery (draft eligible), then they don't serve the army (are not veteran); If they are not drafted by the lottery (draft not eligible), then they serve the army (are veteran).
+
+\section{Q3}
+
+The monotonicity assumption here means there is no defiers: If drafted by the lottery, it would only make individuals more likely (willing) to serve the army (become a veteran), and would not affect their decision in an opposite way.
+
+
+\section{Q4}
+
+Since the given IV should satisfy the instrument relevance and exclusion restriction to be a valid IV (under the "first-stage" and exclusion restriction assumption), and under the monotonicity assumption (which has been talked about in Q3), and under the random assignment assumption, we can use the LATE theorem. The Wald estimator is the LATE:
+
+
+```{r}
+#first stage
+first_stage <- lm(vet ~ elig, data=data)
+summary(first_stage)  # Check whether Z influence D 
+
+#second stage
+late_model <- ivreg(lwage ~ vet | elig, data = data)
+summary(late_model)
+
+late_estimate <- coef(late_model)["vet"]
+cat("Estimated LATE:", late_estimate, "\n")
+```
+
+The estimated LATE is -0.2335. It is different in value from what we get in question Q1. I think the problem is that, when we directly do the OLS regression, what we get is the ATT, which is on the individuals who take the  however here what we get is the LATE
+
+\section{Q5}
+
+From our lecture topic 7, we know that LATE can be used to deal with the IV heterogeneity problem. Therefore, I applied to a cross-term of $vet$ and $yob$, and $elig$ and $yob$.
+
+$$
+vet*yob_i = \pi_0 + \pi_1 elig*yob_i +\nu_i
+$$
+
+$$
+lwage_i = \alpha + \delta \cdot \hat{vet*yob}_i + \epsilon_i
+$$
+```{r}
+#1.Use LATE for interaction term:
+
+data$vet_yob <- data$vet * data$yob
+data$elig_yob <- data$elig * data$yob
+
+# First stage regression: Predict D using instrument Z, allowing for birth year interaction
+multi_first_stage <- lm(vet ~ elig_yob, data = data)
+summary(multi_first_stage)  
+
+# Second stage regression: Estimate heterogeneous LATE using 2SLS
+multi_late_model <- ivreg(lwage ~ vet_yob | elig_yob, data = data)
+summary(multi_late_model)
+
+late_estimate0 <- coef(multi_late_model)["vet_yob"]
+cat("Estimated LATE:", late_estimate0, "\n")
+```
+
+We can also regress on both vet, yob and the interaction term of vet and yob:
+
+```{r}
+#2. Use LATE for both vet, yob and the interaction term
+# First stage regression: Predict D using instrument Z, allowing for birth year interaction
+first_stage1 <- lm(vet~ elig * yob, data = data)
+summary(first_stage1)  # Check instrument strength
+
+# Second stage regression: Estimate heterogeneous LATE using 2SLS
+late_model1 <- ivreg(lwage ~ vet * yob | elig * yob, data = data)
+summary(late_model1)
+
+# Extract LATE estimates by birth year
+late_estimates <- coef(late_model1)
+print(late_estimates)
+```
+
+Then we calculate the weighted average:
+```{r}
+# Identify treatment effect coefficients (interaction terms "vet:yob")
+late_coef_indices <- grep("vet:yob", names(late_estimates))  # Extract relevant coefficients
+late_values <- late_estimates[late_coef_indices]  # LATE estimates by birth year
+# Define weights (ensure they are positive and sum to 1)
+# Example: Use sample size for each birth year as weights
+weights <- table(data$yob)  # Count observations per birth year
+weights <- weights[names(late_values)]  # Match with available coefficients
+weights <- weights / sum(weights)  # Normalize to sum to 1
+# Compute weighted LATE
+weighted_LATE <- sum(weights * late_values, na.rm = TRUE)
+```
+
+
+Also, we can use group-by regression to deal with the heterogeneity.
+
+$$
+lwage = \beta_{0,yob} + \beta_{1,yob} \cdot vet + \varepsilon
+$$
+
+```{r}
+
+# 3.Group by regression
+group_results <- data %>%
+  group_by(yob) %>%
+  do(tidy(lm(lwage ~ vet, data = .))) %>%
+  filter(term == "vet")  
+
+print(group_results)
+```
+
+And we weighted them with the proportion of year of birth.
+```{r}
+yob_weights <- data %>%
+  group_by(yob) %>%
+  summarise(weight = n()/nrow(data))
+
+# weighted average
+weighted_avg_effect <- sum(group_results$estimate * yob_weights$weight)
+print(weighted_avg_effect)
+```
+
+
+\section{Q6}
+
+In the IV that allows for parameter heterogeneity, we assume that:
+\begin{itemize}
+\item Random assignment, $Z$ is random assigned
+\item Exclusion restriction, $Z$ can only influence $y$ through $D$
+\item Monotonicity $D_1 \geq D_0$
+\item First stage $E[D_1-D_0] \neq 0$
+
+\end{itemize}
+
+In this case, since $Z$ is no longer completely random with $i$, random assignment is violated, and the validity of LATE theorem is influenced. Also, when November and December births were systematically assigned to lower draft numbers, it is a possible that, the effect of being drafted is correlated with the effect of be born in different time of the year, which has something directly to do with adulthood wages (like some careers in sports may be affeted by month to be born due to the timing of the competitions)

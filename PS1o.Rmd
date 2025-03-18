@@ -1,0 +1,157 @@
+---
+title: "Computational Problem"
+author: "Yuhuan Huang"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+We start with loading and preprocessing the data.
+
+```{r, results='hide'}
+# Set working directory
+#getwd()
+#setwd("./Documents/R-for-Econometrics")
+
+# Read .dta data
+library(haven)
+data <- read_dta("lalonde2.dta")
+head(data)
+summary(data)
+```
+
+```{r,results='hide'}
+# Data cleaning
+processed_data <- na.omit(data) # dealing with missing values
+processed_data <- processed_data[!duplicated(processed_data), ] # dealing with duplicate values
+sapply(processed_data, is.numeric) # check whether the value of each variable is numerics
+dim(processed_data)
+summary(processed_data)
+```
+
+\section{Q1}
+```{r,results='hide'}
+# Observe the treated dataset
+treated_d <- subset(processed_data, treated == 1)
+head(treated_d)
+nontreated_d <- subset(processed_data, treated == 0)
+head(nontreated_d)
+```
+
+```{r}
+##q1
+avg_treated_RE_1978 <- mean(processed_data$re78[processed_data$treated == 1],na.rm = TRUE) 
+# na.rm = TRUE: ignore missing value
+avg_nontreated_RE_1978 <- mean(processed_data$re78[processed_data$treated == 0],na.rm = TRUE)
+print(avg_treated_RE_1978)
+print(avg_nontreated_RE_1978)
+difference <- avg_treated_RE_1978 - avg_nontreated_RE_1978
+print(difference)
+```
+
+The sample average of Real Earnings 1978 for those who received treatment is 5976.35, whereas the sample average of Real Earnings 1978 for those who didn't receive the payment is 5090.05. We can see that those who received treatment earns higher, with an average amount of about 886.30.
+
+\section{Q2}
+
+```{r}
+##q2
+model <- lm(re78 ~ 1 + treated, data = processed_data) #linear regression with interception
+# the default regression contains intercept, so it is the same as: 
+# model <- lm(re78 ~ treated, data = processed_data)
+summary(model)
+print(coefficients(model)["treated"])
+temp <- coefficients(model)["treated"] - difference
+print(temp)
+```
+
+In the regression, the estimated value of $\beta_1$ is 5090.0, the estimated value of $\beta_2$, which is the coefficient of the variable $treated$, is 886.3. It is very close to the difference we get in question 1. The model also has a very low R-squared, which shows its poor explanatory effect.
+
+It is consistent with the result in question 1. Because the variable $treated$ works as an indicator (treated = 1, nontreated = 0) and it is also the only explanatory variable in the model. The meaning of its coefficient $\beta_2$ is that when we improve a unit of variable $treated$, on average the explained variable $re78$ would increase in $\beta_2$. For the indicator $treated$, it shows that those who have been treated ($treated = 1$) have on average about 886.3 dollars higher in their Real Earnings in 1978 then the nontreated, which is exactly what we get in question 1.
+
+
+\section{Q3}
+
+```{r}
+##q3
+
+# predicted value and residuals:
+pred_y <- predict(model)
+head(pred_y, n=20)
+resids <- residuals(model)
+head(resids, n=20)
+```
+
+The predicted values and residuals are as above. Then verify P1 to P5:
+
+```{r}
+#check P1: y_bar = X_bar * b
+y_bar <- mean(processed_data$re78)
+X_mean <- c(1,mean(processed_data$treated)) # Contains the constant term
+#print(X_mean)
+b <- coefficients(model)
+#print(b)
+y_multiply <- sum(X_mean*b)
+#print(y_bar)
+#print(y_multiply)
+dif <- y_bar - y_multiply
+print(dif)
+```
+
+Check P1: Regression passes through the mean of the data. We can see that the difference between $\bar{y}$ and $\bar{X}b$ is very small (6.366e-12). It verifies that $\bar{y} = \bar{X}b$.
+
+```{r}
+#check P2: Sum of actual values equals sum of predicted values
+sum_y <- sum(processed_data$re78)
+sum_pred_y <- sum(pred_y)
+sum_of_err <- sum_y - sum_pred_y
+#print(sum_y)
+#print(sum_pred_y)
+print(sum_of_err)
+```
+
+Check P2: Sum of actual values equals sum of predicted values. We can see that the difference between the sum of the real $y$ and the sum of the predicted value $\hat{y}$ is very small (4.051e-08)
+
+```{r}
+#check P3: Sum of residual is zero
+sum_resids <- sum(resids)
+print(sum_resids)
+```
+
+Check P3: Residuals sum to zero. We can see that the sum of the residuals is indeed close to zero (-1.238e-09).
+
+
+```{r}
+#check P4: Residuals are orthogonal to regressors
+X <- model.matrix(model) # X matrix containing the intercept
+#print(X)
+rst <- t(X) %*% resids # compute X'e
+print(rst)
+```
+
+
+Check P4: Residuals are orthogonal to regressors. We compute $X'e$, and find that each element is close to zero (-1.237e-09 and  -8.622e-10).
+
+
+```{r}
+#check P5: Residuals are orthogonal to predicted values
+rst2 <- t(pred_y) %*% resids # compute y_hat'e
+print(rst2)
+```
+
+Check P5: Residuals are orthogonal to regressors. We compute $X'e$, and find that each element is close to zero (-1.237e-09 and  -8.622e-10).
+
+\section{Q4}
+```{r}
+model2 <- lm(re78 ~ 1 + treated + age + educ + black 
+             + married + nodegree + hisp + kids18 
+             + kidmiss + re74, data = processed_data) 
+#linear regression with interception
+summary(model2)
+
+temp2 <- coefficients(model2)["treated"]
+print(temp2)
+```
+
+
+In this multivariate model, the regression result shows that the estimated value of the coefficient of $treated$ is 796.55. We can interpret it in this way: Keeping other explanatory variables (such as age, education, etc.) the same, on average, people who participate in a work experience program (treated) get about 796.55 higher in their Real Earnings in 1978 than those who didn't (nontreated).
+
+The estimation value of $\beta_2$ we get here is different from (lower) than we get from the question2. Here are some possible explanation: Perhaps at first the impact of $treated$ is over-estimated in the one variable model. As we add more reasonable variables to the regression function, other variables also contribute to the explanation of the explained variable. What's more, maybe there are some interaction effect between $treated$ and other variables. We can also find an improvement in R-square in the new model.

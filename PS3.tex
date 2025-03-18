@@ -1,0 +1,279 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\usepackage[margin=1in]{geometry}
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+\usepackage{bookmark}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  pdftitle={PS3},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\title{PS3}
+\author{}
+\date{\vspace{-2.5em}2025-02-25}
+
+\begin{document}
+\maketitle
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(dplyr)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Attaching package: 'dplyr'
+\end{verbatim}
+
+\begin{verbatim}
+## The following objects are masked from 'package:stats':
+## 
+##     filter, lag
+\end{verbatim}
+
+\begin{verbatim}
+## The following objects are masked from 'package:base':
+## 
+##     intersect, setdiff, setequal, union
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(ggplot2)}
+\FunctionTok{library}\NormalTok{(fixest)}
+\FunctionTok{library}\NormalTok{(tidyr)}
+\end{Highlighting}
+\end{Shaded}
+
+Q1
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\DocumentationTok{\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\# Data Generation}
+\FunctionTok{set.seed}\NormalTok{(}\DecValTok{1234}\NormalTok{)}
+
+\NormalTok{n\_units }\OtherTok{\textless{}{-}} \DecValTok{1000}
+
+\CommentTok{\#50 states}
+\NormalTok{states }\OtherTok{\textless{}{-}} \DecValTok{1}\SpecialCharTok{:}\DecValTok{50}
+\NormalTok{unit\_states }\OtherTok{\textless{}{-}} \FunctionTok{sample}\NormalTok{(states, n\_units, }\AttributeTok{replace =} \ConstantTok{TRUE}\NormalTok{) }\DocumentationTok{\#\# assign 1{-}1000 to different states}
+
+\CommentTok{\#Policy years}
+\NormalTok{g\_list }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(}\DecValTok{1996}\NormalTok{, }\DecValTok{2002}\NormalTok{, }\DecValTok{2008}\NormalTok{, }\DecValTok{2014}\NormalTok{)}
+\NormalTok{state\_groups }\OtherTok{\textless{}{-}} \FunctionTok{sample}\NormalTok{(g\_list, }\DecValTok{50}\NormalTok{, }\AttributeTok{replace =} \ConstantTok{TRUE}\NormalTok{)  }\CommentTok{\# every state is assigned to a policy year}
+\NormalTok{unit\_groups }\OtherTok{\textless{}{-}}\NormalTok{ state\_groups[unit\_states]}
+
+\CommentTok{\#years}
+\NormalTok{years }\OtherTok{\textless{}{-}} \DecValTok{1990}\SpecialCharTok{:}\DecValTok{2020}
+\NormalTok{n\_years }\OtherTok{\textless{}{-}} \FunctionTok{length}\NormalTok{(years)}
+
+\CommentTok{\#construct the panel data}
+\NormalTok{data }\OtherTok{\textless{}{-}} \FunctionTok{expand.grid}\NormalTok{(}\AttributeTok{unit =} \DecValTok{1}\SpecialCharTok{:}\NormalTok{n\_units, }\AttributeTok{year =}\NormalTok{ years)}
+\NormalTok{data}\SpecialCharTok{$}\NormalTok{state }\OtherTok{\textless{}{-}} \FunctionTok{rep}\NormalTok{(unit\_states, }\AttributeTok{each =}\NormalTok{ n\_years)  }
+\NormalTok{data}\SpecialCharTok{$}\NormalTok{G }\OtherTok{\textless{}{-}} \FunctionTok{rep}\NormalTok{(unit\_groups, }\AttributeTok{each =}\NormalTok{ n\_years)  }\CommentTok{\# rep: replicate the element n times}
+
+\CommentTok{\#unit fixed effect α\_i}
+\NormalTok{alpha }\OtherTok{\textless{}{-}} \FunctionTok{rnorm}\NormalTok{(n\_units, }\AttributeTok{mean =}\NormalTok{ data}\SpecialCharTok{$}\NormalTok{state }\SpecialCharTok{/} \DecValTok{1}\NormalTok{, }\AttributeTok{sd =} \DecValTok{1}\NormalTok{)}
+\NormalTok{data}\SpecialCharTok{$}\NormalTok{alpha }\OtherTok{\textless{}{-}} \FunctionTok{rep}\NormalTok{(alpha, }\AttributeTok{each =}\NormalTok{ n\_years)}
+
+\CommentTok{\#time fixed effect λ\_t}
+\NormalTok{data}\SpecialCharTok{$}\NormalTok{lambda }\OtherTok{\textless{}{-}} \ConstantTok{NA} 
+\NormalTok{time\_FE\_errors }\OtherTok{\textless{}{-}} \FunctionTok{rnorm}\NormalTok{(}\DecValTok{1}\NormalTok{, }\AttributeTok{mean =} \DecValTok{0}\NormalTok{, }\AttributeTok{sd =} \DecValTok{1}\NormalTok{)}
+
+\ControlFlowTok{for}\NormalTok{ (g }\ControlFlowTok{in}\NormalTok{ g\_list) \{}
+\NormalTok{  indices }\OtherTok{\textless{}{-}} \FunctionTok{which}\NormalTok{(data}\SpecialCharTok{$}\NormalTok{G }\SpecialCharTok{==}\NormalTok{ g)  }\DocumentationTok{\#\# the number of rows that G\_i=g}
+\NormalTok{  data}\SpecialCharTok{$}\NormalTok{lambda[indices] }\OtherTok{\textless{}{-}} \FloatTok{0.1} \SpecialCharTok{*}\NormalTok{ (data}\SpecialCharTok{$}\NormalTok{year[indices] }\SpecialCharTok{{-}}\NormalTok{ g) }\SpecialCharTok{+}\NormalTok{ time\_FE\_errors}
+\NormalTok{\}}
+
+
+\CommentTok{\#idiosyncratic error ε\_it}
+\NormalTok{data}\SpecialCharTok{$}\NormalTok{epsilon }\OtherTok{\textless{}{-}} \FunctionTok{rnorm}\NormalTok{(n\_units }\SpecialCharTok{*}\NormalTok{ n\_years, }\AttributeTok{mean =} \DecValTok{0}\NormalTok{, }\AttributeTok{sd =} \FloatTok{0.5}\NormalTok{)}
+
+\CommentTok{\#treatment effect τ\_it}
+\NormalTok{data}\SpecialCharTok{$}\NormalTok{treatment\_effect }\OtherTok{\textless{}{-}}\NormalTok{ (data}\SpecialCharTok{$}\NormalTok{year }\SpecialCharTok{{-}}\NormalTok{ data}\SpecialCharTok{$}\NormalTok{G }\SpecialCharTok{+} \DecValTok{1}\NormalTok{) }\SpecialCharTok{*}\NormalTok{ (data}\SpecialCharTok{$}\NormalTok{year }\SpecialCharTok{\textgreater{}=}\NormalTok{ data}\SpecialCharTok{$}\NormalTok{G)}
+
+\CommentTok{\# Y\_it}
+\NormalTok{data}\SpecialCharTok{$}\NormalTok{Y }\OtherTok{\textless{}{-}}\NormalTok{ (}\DecValTok{2020} \SpecialCharTok{{-}}\NormalTok{ data}\SpecialCharTok{$}\NormalTok{G) }\SpecialCharTok{+}\NormalTok{ data}\SpecialCharTok{$}\NormalTok{alpha }\SpecialCharTok{+}\NormalTok{ data}\SpecialCharTok{$}\NormalTok{lambda }\SpecialCharTok{+}\NormalTok{ data}\SpecialCharTok{$}\NormalTok{treatment\_effect }\SpecialCharTok{+}\NormalTok{ data}\SpecialCharTok{$}\NormalTok{epsilon}
+
+\FunctionTok{head}\NormalTok{(data)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##   unit year state    G    alpha     lambda    epsilon treatment_effect        Y
+## 1    1 1990    28 2002 26.82155 -0.2341842 -0.5779107                0 44.00946
+## 2    2 1990    28 2002 26.82155 -0.2341842 -0.3756979                0 44.21167
+## 3    3 1990    28 2002 26.82155 -0.2341842 -0.3725422                0 44.21483
+## 4    4 1990    28 2002 26.82155 -0.2341842  0.6135262                0 45.20089
+## 5    5 1990    28 2002 26.82155 -0.2341842 -0.0954290                0 44.49194
+## 6    6 1990    28 2002 26.82155 -0.2341842  0.2771554                0 44.86452
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\DocumentationTok{\#\# Plot ATT}
+\DocumentationTok{\#\# ATT}
+\NormalTok{ATT\_data }\OtherTok{\textless{}{-}}\NormalTok{ data }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{group\_by}\NormalTok{(year, G) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{summarise}\NormalTok{(}\AttributeTok{ATT =} \FunctionTok{mean}\NormalTok{(treatment\_effect), }\AttributeTok{.groups =} \StringTok{\textquotesingle{}drop\textquotesingle{}}\NormalTok{)}
+
+
+\DocumentationTok{\#\# plot ATT \& year t}
+\FunctionTok{ggplot}\NormalTok{(ATT\_data, }\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ year, }\AttributeTok{y =}\NormalTok{ ATT, }\AttributeTok{color =} \FunctionTok{factor}\NormalTok{(G))) }\SpecialCharTok{+}
+  \FunctionTok{geom\_line}\NormalTok{(}\AttributeTok{size =} \DecValTok{1}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{theme\_minimal}\NormalTok{() }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{(}\AttributeTok{title =} \StringTok{"ATT over t"}\NormalTok{,}
+       \AttributeTok{x =} \StringTok{"t"}\NormalTok{,}
+       \AttributeTok{y =} \StringTok{"ATT"}\NormalTok{,}
+       \AttributeTok{color =} \StringTok{"Policy Enactment Year"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Warning: Using `size` aesthetic for lines was deprecated in ggplot2 3.4.0.
+## i Please use `linewidth` instead.
+## This warning is displayed once every 8 hours.
+## Call `lifecycle::last_lifecycle_warnings()` to see where this warning was
+## generated.
+\end{verbatim}
+
+\includegraphics{PS3_files/figure-latex/unnamed-chunk-3-1.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\DocumentationTok{\#\# plot ATT \& t{-}g}
+\FunctionTok{ggplot}\NormalTok{(ATT\_data, }\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ year}\SpecialCharTok{{-}}\NormalTok{G, }\AttributeTok{y =}\NormalTok{ ATT, }\AttributeTok{color =} \FunctionTok{factor}\NormalTok{(G))) }\SpecialCharTok{+}
+  \FunctionTok{geom\_line}\NormalTok{(}\AttributeTok{size =} \DecValTok{1}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{theme\_minimal}\NormalTok{() }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{(}\AttributeTok{title =} \StringTok{"ATT over t{-}g"}\NormalTok{,}
+       \AttributeTok{x =} \StringTok{"t{-}g"}\NormalTok{,}
+       \AttributeTok{y =} \StringTok{"ATT"}\NormalTok{,}
+       \AttributeTok{color =} \StringTok{"Policy Enactment Year"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{PS3_files/figure-latex/unnamed-chunk-3-2.pdf}
+
+Q2
+
+Q6
+
+When ATT(g,t) can be identified, we should have: (1) the treated group
+should be treated before t, that is: \(t \geq g\). (2) There is still
+comparison group that hasn't been treated at time t, that is
+\(t \leq 2013\)
+
+So the set \(\{g,t\}\) is:
+
+\[
+\{ g, t \} \text{ such that } g \in \{1996, 2002, 2008, 2014\}, t \geq g, t \leq 2013
+\]
+
+The estimand is: \[
+ATT(g,t) = E[Y_{igt} | G_i = g, t] - E[Y_{ijt} | G_j > t]
+\]
+
+The assumption: (1) Parallel trends assumption. (2) No anticipation
+effects.
+
+In the TWFE model, the comparisons are
+
+\end{document}
