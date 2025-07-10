@@ -1,0 +1,324 @@
+library("haven")
+library("dplyr")
+library("tidyr")
+library("psych")
+library("skimr")
+library("ggplot2")
+data <- read_dta("ps3_2025.dta")
+
+#Q1
+last_15 <- tail(colnames(data), 15)
+print(last_15)
+
+missing_values <- list(
+  cardiac = c(8,9), 
+  lung = c(8,9), 
+  diabetes = c(8,9),
+  herpes = c(8,9), 
+  chyper = c(8,9),
+  phyper = c(8,9), 
+  pre4000 = c(8,9),
+  preterm = c(8,9),
+  tobacco = 9,
+  cigar = 99,
+  cigar6 = 6,
+  alcohol = 5,
+  drink = 99,
+  drink5 = 5,
+  wgain = 99
+)
+
+
+clean_data <- data %>%
+  mutate(across(
+    all_of(names(missing_values)),
+    ~ ifelse(.x %in% missing_values[[cur_column()]], NA, .x)
+  ))
+
+
+clean_data <- clean_data %>% drop_na()
+
+describe(clean_data)
+
+#Q2
+
+data1 <- clean_data %>%
+  mutate(nonsmoking = if_else((tobacco == 2 & cigar6 == 0),1,0))
+
+data1 <- data1 %>%
+  mutate(smoking = if_else((nonsmoking == 0),1,0))
+
+grouping_data2 <- data1 %>%
+  group_by(smoking) %>%
+  summarise(
+    mean_apgar1 = mean(omaps),
+    mean_apgar5 = mean(fmaps),
+    mean_birthweight = mean(dbrwt)
+  )
+
+
+data2_diff <- grouping_data2 %>% 
+  summarise(
+    apgar1_diff = diff(mean_apgar1),
+    apgar5_diff = diff(mean_apgar5),
+    birthweight_diff = diff(mean_birthweight)
+  )
+
+print(grouping_data2)
+print(data2_diff)
+
+data1 %>%
+  group_by(smoking) %>%
+  skim()
+
+predetermined_variables <- c("stresfip","ormoth","mrace3","orfath","birmon","weekday",
+                             "csex","dplural","anemia","cardiac","diabetes","herpes"
+                             ,"chyper","phyper","pre4000","preterm")
+
+print(predetermined_variables)
+
+formular_str0 <- paste("dbrwt ~ smoking + ",paste(predetermined_variables, collapse="+"))
+formular_obj0 <- as.formula(formular_str0)
+
+model <- lm(formular_obj0 , data = data1)
+summary(model)
+
+#Q3
+
+formula_str <- paste("smoking ~", paste(predetermined_variables, collapse="+"))
+formula_obj <- as.formula(formula_str)
+
+#logit regression
+logit_model <- glm(formula_obj, data = data1, family = binomial())
+summary(logit_model)
+logit_vals <- predict(logit_model, type = "link")
+data1$pscore <- predict(logit_model, type = "response")
+print(data1$pscore)
+
+sig_predetermined_vars <- c("stresfip","ormoth","mrace3","dplural","anemia",
+                            "phyper","pre4000","preterm")
+
+formula_str2 <- paste("smoking ~", paste(sig_predetermined_vars, collapse="+"))
+formula_obj2 <- as.formula(formula_str2)
+
+logit_model2 <- glm(formula_obj2, data = data1, family = binomial())
+summary(logit_model2)
+logit_vals2 <- predict(logit_model2, type = "link")
+data1$pscore_sig <- predict(logit_model2, type = "response")
+print(data1$pscore_sig)
+
+#compare the two propensity scores
+plot(data1$pscore, data1$pscore_sig,
+     xlab = "all predetermined", ylab = "significant predetermined", main = "Propensity Score Comparison")
+abline(0, 1, col = "red")
+
+#include propensity score as a covariate
+model_covariate <- lm(dbrwt ~ smoking + pscore_sig, data = data1)
+summary(model_covariate)
+
+#weighting with propensity score
+sum_smoking <- 0
+sum_nonsmkoing <- 0
+for (i in 1:nrow(data1)){
+  p <- data1$pscore_sig[i]
+  y <- data1$dbrwt[i]
+  d <- data1$smoking[i]
+  
+  if (is.na(p) || is.na(y) || is.na(d) || p == 0 || p == 1) {
+    next
+  }
+  
+  if(d==1){
+    sum_smoking <- sum_smoking + y/p
+  }else if(d==0){
+    sum_nonsmkoing <- sum_nonsmkoing + y/(1-p)
+  }
+}
+
+weighted_ATE = 1/(nrow(data1)) * (sum_smoking - sum_nonsmkoing)
+print(weighted_ATE)
+
+#blocking on propensity score
+
+#data1 <- data1 %>%
+#  mutate(bin = ntile(pscore_sig, 100))
+
+data1 <- data1 %>%
+  mutate(bin = cut(pscore_sig, breaks = 100, include.lowest = TRUE, labels = FALSE))
+
+data_smokers <- data1 %>%
+  filter(smoking == 1) %>%
+  group_by(bin) %>%
+  summarize(pscore_mean = mean(pscore_sig),
+            y_mean = mean(dbrwt),
+            .groups = "drop") %>%
+  mutate(group = "Smokers")
+
+data_nonsmokers <- data1 %>%
+  filter(smoking == 0) %>%
+  group_by(bin) %>%
+  summarize(pscore_mean = mean(pscore_sig),
+            y_mean = mean(dbrwt),
+            .groups = "drop") %>%
+  mutate(group = "Non-Smokers")
+
+plot_data <- bind_rows(data_smokers, data_nonsmokers)
+
+ggplot(plot_data, aes(x = pscore_mean, y = y_mean, color = group)) +
+  geom_point() +
+  labs( x = "propensity score",
+        y = "mean of birth weight",
+        title = "Mean of Birth Weight by Smoking Status",
+        color = "Group"
+  ) +
+  theme_minimal()
+
+#bin_counts <- data1 %>%
+#  group_by(bin) %>%
+#  summarize(n_bin = n(), .groups = "drop") %>%
+#  mutate(weight = n_bin / sum(n_bin))
+
+#bin_means <- data1 %>%
+#  group_by(bin, smoking) %>%
+#  summarize(y_mean = mean(dbrwt), .groups = "drop") %>%
+#  pivot_wider(names_from = smoking, values_from = y_mean, names_prefix = "smoking_") 
+  ##adjust format to wide format smoking_1 and smoking_0
+
+#bin_estimates <- bin_counts %>%
+#  left_join(bin_means, by = "bin") %>%
+#  mutate(tau_b = smoking_1 - smoking_0,
+#         w_tau_b = weight * tau_b)
+
+#tau_sb <- sum(bin_estimates$w_tau_b, na.rm = TRUE)
+#print(tau_sb)
+
+mean0 <- data1 %>%
+  filter(smoking == 0) %>%
+  group_by(bin) %>%
+  summarize(y0 = mean(dbrwt), .groups = "drop")
+
+mean1 <- data1 %>%
+  filter(smoking == 1) %>%
+  group_by(bin) %>%
+  summarize(y1 = mean(dbrwt), .groups = "drop")
+
+bin_estimates <- mean0 %>%
+  left_join(mean1, by = "bin") %>%
+  mutate(tau_b = y1 - y0)
+
+#stratefy weights
+bin_weights <- data1 %>%
+  group_by(bin) %>%
+  summarize(n_bin = n(), .groups = "drop") %>%
+  mutate(weight = n_bin / sum(n_bin))
+
+bin_estimates <- bin_estimates %>%
+  left_join(bin_weights, by = "bin") %>%
+  mutate(w_tau_b = weight * tau_b)
+
+tau_sb <- sum(bin_estimates$w_tau_b, na.rm = TRUE)
+print(tau_sb)
+
+############### new 
+
+data1 <- data1 %>%
+  mutate(bin = cut(pscore_sig, breaks = 100, include.lowest = TRUE, labels = FALSE))
+
+data_smokers <- data1 %>%
+  filter(smoking == 1) %>%
+  group_by(bin) %>%
+  summarize(pscore_mean = mean(pscore_sig), y1 = mean(dbrwt), .groups = "drop")
+
+data_nonsmokers <- data1 %>%
+  filter(smoking == 0) %>%
+  group_by(bin) %>%
+  summarize(pscore_mean = mean(pscore_sig), y0 = mean(dbrwt), .groups = "drop")
+
+bin_estimates <- data_nonsmokers %>%
+  left_join(data_smokers, by = "bin", suffix = c("_0", "_1")) %>%
+  mutate(tau_b = y1 - y0)
+
+bin_weights <- data1 %>%
+  group_by(bin) %>%
+  summarize(n_bin = n(), .groups = "drop") %>%
+  mutate(weight = n_bin / sum(n_bin))
+
+bin_estimates <- bin_estimates %>%
+  left_join(bin_weights, by = "bin") %>%
+  mutate(w_tau_b = weight * tau_b)
+
+tau_sb <- sum(bin_estimates$w_tau_b, na.rm = TRUE)
+print(tau_sb)
+
+
+plot_data <- bin_estimates %>%
+  select(bin, pscore_mean = pscore_mean_0, y0, y1) %>%
+  pivot_longer(cols = c(y0, y1), names_to = "group", values_to = "y_mean") %>%
+  mutate(group = ifelse(group == "y0", "Non-Smokers", "Smokers"))
+
+ggplot(plot_data, aes(x = pscore_mean, y = y_mean, color = group)) +
+  geom_point()+
+  labs(
+    x = "Propensity Score",
+    y = "Mean Birth Weight",
+    title = "Conditional Mean of Birth Weight by Propensity Score",
+    color = "Group"
+  ) +
+  theme_minimal()
+
+# Q5
+data3 <- data1
+data3 <- data3 %>%
+  mutate(lowbw = if_else(dbrwt < 2500, 1, 0))
+
+data3 <- data3 %>%
+  mutate(bin = cut(pscore_sig, breaks = 100, include.lowest = TRUE, labels = FALSE))
+
+data_smokers3 <- data3 %>%
+  filter(smoking == 1) %>%
+  group_by(bin) %>%
+  summarize(pscore_mean = mean(pscore_sig),
+            y1 = mean(lowbw),  
+            .groups = "drop")
+
+data_nonsmokers3 <- data3 %>%
+  filter(smoking == 0) %>%
+  group_by(bin) %>%
+  summarize(pscore_mean = mean(pscore_sig),
+            y0 = mean(lowbw),
+            .groups = "drop")
+
+bin_estimates3 <- data_nonsmokers3 %>%
+  left_join(data_smokers3, by = "bin", suffix = c("_0", "_1")) %>%
+  mutate(tau_b = y1 - y0)
+
+
+bin_weights3 <- data3 %>%
+  group_by(bin) %>%
+  summarize(n_bin = n(), .groups = "drop") %>%
+  mutate(weight = n_bin / sum(n_bin))
+
+bin_estimates3 <- bin_estimates3 %>%
+  left_join(bin_weights3, by = "bin") %>%
+  mutate(w_tau_b = weight * tau_b)
+
+tau_sb3 <- sum(bin_estimates3$w_tau_b, na.rm = TRUE)
+print(tau_sb3)
+
+
+plot_data3 <- bin_estimates3 %>%
+  select(bin, pscore_mean = pscore_mean_0, y0, y1) %>%
+  pivot_longer(cols = c(y0, y1), names_to = "group", values_to = "y_mean") %>%
+  mutate(group = ifelse(group == "y0", "Non-Smokers", "Smokers"))
+
+ggplot(plot_data3, aes(x = pscore_mean, y = y_mean, color = group)) +
+  geom_point() +
+  labs(
+    x = "Estimated Propensity Score",
+    y = "Proportion of Low Birth Weight",
+    title = "Conditional Probability of Low Birth Weight by Propensity Score",
+    color = "Group"
+  ) +
+  theme_minimal()
+
+
